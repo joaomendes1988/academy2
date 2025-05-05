@@ -135,6 +135,8 @@ jobs:
     - name: Load Docker Image
       run: |
         docker load -i $image_name.tar
+        IMAGE_NAME=$(docker images --format "{{.Repository}}:{{.Tag}}" | head -n 1)
+        echo "image_generated=$IMAGE_NAME" >> $GITHUB_ENV
 
     - name: List Docker Images
       run: |
@@ -150,4 +152,4 @@ jobs:
       uses: ./.github/actions/docker_push 
       with:
         docker_username: ${{ secrets.DOCKERHUB_USERNAME }}
-        docker_image: $image_name:$tag_name
+        docker_image: $image_generated
