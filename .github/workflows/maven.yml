@@ -56,7 +56,7 @@ jobs:
       matrix: ${{ steps.set_matrix.outputs.matrix }}
 
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.machine }}
 
     needs: matrix
 
@@ -100,6 +100,8 @@ jobs:
       with:
         tag_name: $tag_name
         image_name: $image_name
+        architecture: ${{ matrix.arch }}
+        arch_name: ${{ matrix.arch_name }}
       
     - name: save docker image
       run: |
