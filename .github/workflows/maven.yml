@@ -96,6 +96,7 @@ jobs:
       uses: ./.github/actions/maven_build
 
     - name: Call action
+      id: docker_build
       uses: ./.github/actions/docker_build
       with:
         tag_name: $tag_name
@@ -105,7 +106,7 @@ jobs:
       
     - name: save docker image
       run: |
-        docker save -o $image_name.tar $image_name:$tag_name
+        docker save -o $image_name.tar ${{ steps.docker_build.outputs.image_exported }}
     
     - uses: actions/upload-artifact@v4
       with:
