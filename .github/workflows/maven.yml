@@ -110,7 +110,7 @@ jobs:
     
     - uses: actions/upload-artifact@v4
       with:
-        name: $artifact_name-${{ matrix.arch_name }}
+        name: "${{ env.artifact_name }}-${{ matrix.arch_name }}"
         path: "${{ env.image_name }}.tar"
 
   push:
@@ -130,7 +130,7 @@ jobs:
     - name: Download artifact
       uses: actions/download-artifact@v4
       with:
-        name: $artifact_name-${{ matrix.arch_name }}
+        name: "${{ env.artifact_name }}-${{ matrix.arch_name }}"
     
     - name: Load Docker Image
       run: |
