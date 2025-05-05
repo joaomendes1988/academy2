@@ -38,8 +38,30 @@ env:
  artifact_name: file
 
 jobs:
+  matrix:
+    runs-on: ubuntu-latest
+
+    steps:
+      - id: set_matrix
+        run: |
+          MATRIX_JSON='{
+            "include": [
+              { "arch": "linux/arm64", "arch_name": "arm64" , "machine": "ubuntu-24.04-arm"},
+              { "arch": "linux/amd64", "arch_name": "amd64" , "machine": "ubuntu-latest"}
+            ]
+          }'
+          MATRIX_JSON=$(jq -c <<< $MATRIX_JSON)
+          echo "matrix=$MATRIX_JSON" >> $GITHUB_OUTPUT
+    outputs:
+      matrix: ${{ steps.set_matrix.outputs.matrix }}
+
   build:
     runs-on: ubuntu-latest
+
+    needs: matrix
+
+    strategy:
+      matrix: ${{ fromJSON(needs.matrix.outputs.matrix) }}
 
     services:
       # Label used to access the service container
@@ -90,7 +112,12 @@ jobs:
 
   push:
     runs-on: ubuntu-latest
-    needs: build
+    needs: 
+      - build
+      - matrix
+    
+    strategy:
+      matrix: ${{ fromJSON(needs.matrix.outputs.matrix) }}
 
     environment: ${{ inputs.environment }} 
 
