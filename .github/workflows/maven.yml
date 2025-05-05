@@ -119,4 +119,4 @@ jobs:
       uses: ./.github/actions/docker_push 
       with:
         docker_username: ${{ secrets.DOCKERHUB_USERNAME }}
-        docker_image: $image_name
+        docker_image: $image_name:$tag_name
