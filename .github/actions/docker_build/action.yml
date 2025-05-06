@@ -11,37 +11,15 @@ inputs:
   tag_name:
     description: "This is the tag that will be applied to the image. If not provided, a timestamp will be used."
     required: false
-  architecture:
-    description: "Replace-With-Your-Input-Description"
-    required: false
-  arch_name:
-    description: "Replace-With-Your-Input-Description"
-    required: false
-outputs:
-  image_exported:
-      description: "description"
-      value: ${{ steps.docker_build.outputs.image_exported }}
 runs:
   using: composite
   steps:
-    - id: docker_build
-      run: |
+    - run: |
         if [ -z "${{ inputs.tag_name }}" ]; then
           export TAG=$(date +%s)
         else
-            export TAG="${{ inputs.tag_name }}"
+          export TAG="${{ inputs.tag_name }}"
         fi
 
-        if [ -n "${{ inputs.arch_name }}" ]; then
-          export TAG="$TAG-${{ inputs.arch_name }}"
-        fi
-
-         if [ -z "${{ inputs.arch_name }}" ]; then
-          docker build . --file Dockerfile --tag ${{ inputs.image_name }}:$TAG
-        else
-          docker build . --file Dockerfile --tag ${{ inputs.image_name }}:$TAG --platform ${{ inputs.architecture }}
-        fi
-
-        echo "image_exported=${{ inputs.image_name }}:$TAG" >> $GITHUB_OUTPUT
-        
+        docker build . --file ${{ inputs.path_dockerfile }} --tag ${{ inputs.image_name }}:$TAG
       shell: bash
