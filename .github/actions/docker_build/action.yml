@@ -4,7 +4,7 @@ inputs:
   path_dockerfile:
     description:  "This allows us to locate the correct Dockerfile, even if it has a different name or is located in a different directory."
     required: false
-    default: "Dockefile"
+    default: "Dockerfile"
   image_name:
     description: "This is the name of the image that will be built. It can be a simple name or a full repository name (e.g., username/repo)."
     required: true
