@@ -1,13 +1,5 @@
-# This workflow will build a Java project with Maven, and cache/restore any dependencies to improve the workflow execution time
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-java-with-maven
-
-# This workflow uses actions that are not certified by GitHub.
-# They are provided by a third-party and are governed by
-# separate terms of service, privacy policy, and support
-# documentation.
-
 name: Java CI with Maven
-run-name: ${{ inputs.environment }}
+run-name: Docker Build and Push to ${{ inputs.environment }}
 
 on:
   #push:
@@ -33,54 +25,27 @@ on:
         type: string
 
 env:
- image_name: academy2
+ image_name: academy
  tag_name: "${{ inputs.tag }}-${{ inputs.environment }}"
- artifact_name: file
+ artifact_name: artifact
 
 jobs:
-  matrix:
+  build:
     runs-on: ubuntu-latest
 
-    steps:
-      - id: set_matrix
-        run: |
-          MATRIX_JSON='{
-            "include": [
-              { "arch": "linux/arm64", "arch_name": "arm64" , "machine": "ubuntu-24.04-arm"},
-              { "arch": "linux/amd64", "arch_name": "amd64" , "machine": "ubuntu-latest"}
-            ]
-          }'
-          MATRIX_JSON=$(jq -c <<< $MATRIX_JSON)
-          echo "matrix=$MATRIX_JSON" >> $GITHUB_OUTPUT
-    outputs:
-      matrix: ${{ steps.set_matrix.outputs.matrix }}
-
-  build:
-    runs-on: ${{ matrix.machine }}
-
-    needs: matrix
-
-    strategy:
-      matrix: ${{ fromJSON(needs.matrix.outputs.matrix) }}
-
     services:
-      # Label used to access the service container
       postgres:
-        # Docker Hub image
         image: postgres
-        # Provide the password for postgres
         env:
           POSTGRES_PASSWORD: academy
           POSTGRES_USER: academy
           POSTGRES_DB: "postgres"
-        # Set health checks to wait until postgres has started
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
         ports:
-          # Maps tcp port 5432 on service container to the host
           - 5432:5432
 
     steps:
@@ -92,51 +57,40 @@ jobs:
         distribution: 'temurin'
         cache: maven
 
-    - name: Call action
+    - name: Call Maven Build
       uses: ./.github/actions/maven_build
 
-    - name: Call action
-      id: docker_build
+    - name: Call Docker Build
       uses: ./.github/actions/docker_build
       with:
-        tag_name: $tag_name
-        image_name: $image_name
-        architecture: ${{ matrix.arch }}
-        arch_name: ${{ matrix.arch_name }}
+        tag_name: ${{ env.tag_name }}
+        image_name: ${{ env.image_name }}
       
-    - name: save docker image
+    - name: Save Docker Image
       run: |
-        docker save -o $image_name.tar ${{ steps.docker_build.outputs.image_exported }}
+        docker save -o ${{ env.image_name }}.tar ${{ env.image_name }}:${{ env.tag_name }}
     
     - uses: actions/upload-artifact@v4
       with:
-        name: "${{ env.artifact_name }}-${{ matrix.arch_name }}"
+        name: ${{ env.artifact_name }}
         path: "${{ env.image_name }}.tar"
 
   push:
     runs-on: ubuntu-latest
-    needs: 
-      - build
-      - matrix
-    
-    strategy:
-      matrix: ${{ fromJSON(needs.matrix.outputs.matrix) }}
+    needs: build
 
     environment: ${{ inputs.environment }} 
 
     steps:
     - uses: actions/checkout@v4
-
     - name: Download artifact
       uses: actions/download-artifact@v4
       with:
-        name: "${{ env.artifact_name }}-${{ matrix.arch_name }}"
+        name: ${{ env.artifact_name }}
     
     - name: Load Docker Image
       run: |
-        docker load -i $image_name.tar
-        IMAGE_NAME=$(docker images --format "{{.Repository}}:{{.Tag}}" | head -n 1)
-        echo "image_generated=$IMAGE_NAME" >> $GITHUB_ENV
+        docker load -i ${{ env.image_name }}.tar
 
     - name: List Docker Images
       run: |
@@ -152,4 +106,4 @@ jobs:
       uses: ./.github/actions/docker_push 
       with:
         docker_username: ${{ secrets.DOCKERHUB_USERNAME }}
-        docker_image: $image_generated
+        docker_image: ${{ env.image_name }}:${{ env.tag_name }}

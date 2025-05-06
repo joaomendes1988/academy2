@@ -6,10 +6,10 @@ inputs:
     required: false
     default: "Dockefile"
   image_name:
-    description: "Replace-With-Your-Input-Description"
+    description: "This is the name of the image that will be built. It can be a simple name or a full repository name (e.g., username/repo)."
     required: true
   tag_name:
-    description: "Replace-With-Your-Input-Description"
+    description: "This is the tag that will be applied to the image. If not provided, a timestamp will be used."
     required: false
   architecture:
     description: "Replace-With-Your-Input-Description"

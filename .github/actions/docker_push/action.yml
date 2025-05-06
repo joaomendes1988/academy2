@@ -1,5 +1,5 @@
 name: Docker Push
-description: Replace-With-Your-Action-Description
+description: This action pushes a Docker image to a Docker registry
 inputs:
   docker_username:
     description: "Docker username for authentication"
